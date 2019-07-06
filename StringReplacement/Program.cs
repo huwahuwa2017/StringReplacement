@@ -119,10 +119,15 @@ namespace StringReplacement
                         int Index = IXLW.Cell(Count0, 1).GetValue<int>();
                         string ReadText = IXLW.Cell(Count0, 2).GetValue<string>();
                         string WriteText = IXLW.Cell(Count0, 3).GetValue<string>();
+                        
+                        Instruction Ins = null;
 
-                        Instruction Ins = InstructionList[Index];
+                        if (Index >= 0 && Index < InstructionList.Count)
+                        {
+                            Ins = InstructionList[Index];
+                        }
 
-                        if (Ins.Operand.ToString() != ReadText)
+                        if (Ins == null || Ins.Operand.ToString() != ReadText)
                         {
                             //Error
                             Console.WriteLine($"置き換えに失敗しました NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
