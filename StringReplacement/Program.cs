@@ -1,7 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,7 +56,7 @@ namespace StringReplacement
                 Title = Text1,
                 InitialDirectory = Path.GetDirectoryName(InputPath),
                 FileName = InputPath,
-                Filter = "xlsx files (*.xlsx)|*.xlsx|json files (*.json)|*.json|All files (*.*)|*.*"
+                Filter = "xlsx files (*.xlsx)|*.xlsx|All files (*.*)|*.*"
             };
 
             if (SFD.ShowDialog() == DialogResult.OK)
@@ -92,97 +91,54 @@ namespace StringReplacement
 
             AssemblyDefinition AssemblyDef = AssemblyDefinition.ReadAssembly(DLLPath, new ReaderParameters { ReadWrite = true });
             IEnumerable<TypeDefinition> TypeDefList = AssemblyDef.Modules.SelectMany(x => x.Types);
+            
+            IXLWorksheet IXLW = new XLWorkbook(InputPath).Worksheet("Translation");
+            int RowNum = IXLW.LastRowUsed().RowNumber();
+            int Count0 = 0;
 
-            string Extension = Path.GetExtension(InputPath);
-
-            if (Extension == ".xlsx")
+            while (Count0 <= RowNum)
             {
-                IXLWorksheet IXLW = new XLWorkbook(InputPath).Worksheet("Translation");
-                int RowNum = IXLW.LastRowUsed().RowNumber();
-                int Count0 = 0;
+                string NameSpaceName = IXLW.Cell(++Count0, 1).GetValue<string>();
+                string TypeName = IXLW.Cell(++Count0, 1).GetValue<string>();
+                string MethodName = IXLW.Cell(++Count0, 1).GetValue<string>();
 
-                while (Count0 <= RowNum)
+                List<Instruction> InstructionList = GetInstructionList(TypeDefList, NameSpaceName, TypeName, MethodName);
+
+                if (InstructionList == null)
                 {
-                    string NameSpaceName = IXLW.Cell(++Count0, 1).GetValue<string>();
-                    string TypeName = IXLW.Cell(++Count0, 1).GetValue<string>();
-                    string MethodName = IXLW.Cell(++Count0, 1).GetValue<string>();
+                    continue;
+                }
 
-                    List<Instruction> InstructionList = GetInstructionList(TypeDefList, NameSpaceName, TypeName, MethodName);
+                while (IXLW.Cell(++Count0, 1).GetValue<string>() != "--")
+                {
+                    int Index = IXLW.Cell(Count0, 1).GetValue<int>();
+                    string ReadText = IXLW.Cell(Count0, 2).GetValue<string>();
+                    string WriteText = IXLW.Cell(Count0, 3).GetValue<string>();
 
-                    if (InstructionList == null)
+                    Instruction Ins = null;
+
+                    if (Index >= 0 && Index < InstructionList.Count)
                     {
+                        Ins = InstructionList[Index];
+                    }
+
+                    if (Ins == null || Ins.Operand.ToString() != ReadText)
+                    {
+                        //Error
+                        Console.WriteLine($"置き換えに失敗しました NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
+                        ++ErrorCount;
                         continue;
                     }
 
-                    while (IXLW.Cell(++Count0, 1).GetValue<string>() != "--")
-                    {
-                        int Index = IXLW.Cell(Count0, 1).GetValue<int>();
-                        string ReadText = IXLW.Cell(Count0, 2).GetValue<string>();
-                        string WriteText = IXLW.Cell(Count0, 3).GetValue<string>();
-                        
-                        Instruction Ins = null;
-
-                        if (Index >= 0 && Index < InstructionList.Count)
-                        {
-                            Ins = InstructionList[Index];
-                        }
-
-                        if (Ins == null || Ins.Operand.ToString() != ReadText)
-                        {
-                            //Error
-                            Console.WriteLine($"置き換えに失敗しました NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
-                            ++ErrorCount;
-                            continue;
-                        }
-
-                        Ins.Operand = WriteText;
-                        ++SuccessCount;
-                    }
+                    Ins.Operand = WriteText;
+                    ++SuccessCount;
                 }
             }
-            else
-            {
-                JArray MainJObject = JArray.Parse(File.ReadAllText(InputPath));
 
-                foreach (JArray ReplacementObject in MainJObject)
-                {
-                    string NameSpaceName = (string)ReplacementObject[0];
-                    string TypeName = (string)ReplacementObject[1];
-                    string MethodName = (string)ReplacementObject[2];
 
-                    List<Instruction> InstructionList = GetInstructionList(TypeDefList, NameSpaceName, TypeName, MethodName);
-
-                    if (InstructionList == null)
-                    {
-                        continue;
-                    }
-
-                    for (int Count0 = 3; Count0 < ReplacementObject.Count; ++Count0)
-                    {
-                        JArray TextObject = (JArray)ReplacementObject[Count0];
-
-                        int Index = (int)TextObject[0];
-                        string ReadText = (string)TextObject[1];
-                        string WriteText = (string)TextObject[2];
-
-                        Instruction Ins = InstructionList[Index];
-
-                        if (Ins.Operand.ToString() != ReadText)
-                        {
-                            //Error
-                            Console.WriteLine($"置き換えに失敗しました NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
-                            ++ErrorCount;
-                            continue;
-                        }
-
-                        Ins.Operand = WriteText;
-                        ++SuccessCount;
-                    }
-                }
-            }
 
             AssemblyDef.Write();
-
+            
             Console.WriteLine("\n置き換えた文字列の数 : " + SuccessCount);
             Console.WriteLine("エラー発生回数 : " + ErrorCount);
             Console.WriteLine("\n文字列の置き換えが完了しました　キー入力で終了します");
@@ -201,8 +157,7 @@ namespace StringReplacement
                 ++ErrorCount;
                 return null;
             }
-
-
+            
             //クラス　検索
             TypeDefinition TargetType = TargetNameSpace.FirstOrDefault(x => x.Name == TypeName);
 
@@ -213,8 +168,7 @@ namespace StringReplacement
                 ++ErrorCount;
                 return null;
             }
-
-
+            
             //メソッド　検索
             MethodDefinition TargetMethod = null;
 

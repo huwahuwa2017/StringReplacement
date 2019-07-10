@@ -8,15 +8,12 @@ C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\M
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\Mono.Cecil.Mdb.dll
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\Mono.Cecil.Pdb.dll
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\Mono.Cecil.Rocks.dll
-C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\Newtonsoft.Json.dll
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\System.IO.FileSystem.Primitives.dll
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\System.IO.Packaging.dll
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\ClosedXML.pdb
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\ClosedXML.xml
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\DocumentFormat.OpenXml.xml
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\ExcelNumberFormat.xml
-C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\Newtonsoft.Json.xml
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csproj.CoreCompileInputs.cache
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csproj.CopyComplete
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.exe
-C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csprojAssemblyReference.cache
