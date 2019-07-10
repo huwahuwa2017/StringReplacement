@@ -17,3 +17,4 @@ C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\bin\Release\E
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csproj.CoreCompileInputs.cache
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csproj.CopyComplete
 C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.exe
+C:\Users\H170\Documents\GitHub\StringReplacement\StringReplacement\obj\Release\StringReplacement.csprojAssemblyReference.cache

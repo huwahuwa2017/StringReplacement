@@ -91,29 +91,42 @@ namespace StringReplacement
 
             AssemblyDefinition AssemblyDef = AssemblyDefinition.ReadAssembly(DLLPath, new ReaderParameters { ReadWrite = true });
             IEnumerable<TypeDefinition> TypeDefList = AssemblyDef.Modules.SelectMany(x => x.Types);
-            
+
             IXLWorksheet IXLW = new XLWorkbook(InputPath).Worksheet("Translation");
             int RowNum = IXLW.LastRowUsed().RowNumber();
-            int Count0 = 0;
+            int LineCount = 0;
 
-            while (Count0 <= RowNum)
+            while (LineCount < RowNum)
             {
-                string NameSpaceName = IXLW.Cell(++Count0, 1).GetValue<string>();
-                string TypeName = IXLW.Cell(++Count0, 1).GetValue<string>();
-                string MethodName = IXLW.Cell(++Count0, 1).GetValue<string>();
+                string NameSpaceName = IXLW.Cell(++LineCount, 1).GetValue<string>();
+                string TypeName = IXLW.Cell(++LineCount, 1).GetValue<string>();
+                string MethodName = IXLW.Cell(++LineCount, 1).GetValue<string>();
 
-                List<Instruction> InstructionList = GetInstructionList(TypeDefList, NameSpaceName, TypeName, MethodName);
+                List<Instruction> InstructionList = GetInstructionList(LineCount, TypeDefList, NameSpaceName, TypeName, MethodName);
 
                 if (InstructionList == null)
                 {
+                    while (IXLW.Cell(++LineCount, 1).GetValue<string>() != "--")
+                    {
+                        if (LineCount > RowNum)
+                        {
+                            break;
+                        }
+                    }
+
                     continue;
                 }
 
-                while (IXLW.Cell(++Count0, 1).GetValue<string>() != "--")
+                while (IXLW.Cell(++LineCount, 1).GetValue<string>() != "--")
                 {
-                    int Index = IXLW.Cell(Count0, 1).GetValue<int>();
-                    string ReadText = IXLW.Cell(Count0, 2).GetValue<string>();
-                    string WriteText = IXLW.Cell(Count0, 3).GetValue<string>();
+                    int Index = IXLW.Cell(LineCount, 1).GetValue<int>();
+                    string ReadText = IXLW.Cell(LineCount, 2).GetValue<string>();
+                    string WriteText = IXLW.Cell(LineCount, 3).GetValue<string>();
+
+                    if (ReadText == WriteText)
+                    {
+                        continue;
+                    }
 
                     Instruction Ins = null;
 
@@ -125,7 +138,7 @@ namespace StringReplacement
                     if (Ins == null || Ins.Operand.ToString() != ReadText)
                     {
                         //Error
-                        Console.WriteLine($"置き換えに失敗しました NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
+                        Console.WriteLine($"置き換えに失敗しました 行:[{LineCount}] NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}] Text:[{WriteText}]\n");
                         ++ErrorCount;
                         continue;
                     }
@@ -138,14 +151,14 @@ namespace StringReplacement
 
 
             AssemblyDef.Write();
-            
+
             Console.WriteLine("\n置き換えた文字列の数 : " + SuccessCount);
             Console.WriteLine("エラー発生回数 : " + ErrorCount);
             Console.WriteLine("\n文字列の置き換えが完了しました　キー入力で終了します");
             Console.ReadKey();
         }
 
-        private static List<Instruction> GetInstructionList(IEnumerable<TypeDefinition> TypeDefList, string NameSpaceName, string TypeName, string MethodName)
+        private static List<Instruction> GetInstructionList(int LineCount, IEnumerable<TypeDefinition> TypeDefList, string NameSpaceName, string TypeName, string MethodName)
         {
             //名前空間　検索
             IEnumerable<TypeDefinition> TargetNameSpace = TypeDefList.Where(x => x.Namespace == NameSpaceName);
@@ -153,22 +166,22 @@ namespace StringReplacement
             if (TargetNameSpace == null || TargetNameSpace.Count() == 0)
             {
                 //Error
-                Console.WriteLine($"ネームスペースが見つかりませんでした NameSpace:[{NameSpaceName}]\n");
+                Console.WriteLine($"ネームスペースが見つかりませんでした 行:[{LineCount}] NameSpace:[{NameSpaceName}]\n");
                 ++ErrorCount;
                 return null;
             }
-            
+
             //クラス　検索
             TypeDefinition TargetType = TargetNameSpace.FirstOrDefault(x => x.Name == TypeName);
 
             if (TargetType == null)
             {
                 //Error
-                Console.WriteLine($"クラスが見つかりませんでした NameSpace:[{NameSpaceName}] Type:[{TypeName}]\n");
+                Console.WriteLine($"クラスが見つかりませんでした 行:[{LineCount}] NameSpace:[{NameSpaceName}] Type:[{TypeName}]\n");
                 ++ErrorCount;
                 return null;
             }
-            
+
             //メソッド　検索
             MethodDefinition TargetMethod = null;
 
@@ -185,7 +198,7 @@ namespace StringReplacement
             if (TargetMethod == null || !TargetMethod.HasBody)
             {
                 //Error
-                Console.WriteLine($"メソッドが見つかりませんでした NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}]\n");
+                Console.WriteLine($"メソッドが見つかりませんでした 行:[{LineCount}] NameSpace:[{NameSpaceName}] Type:[{TypeName}] Method:[{MethodName}]\n");
                 ++ErrorCount;
                 return null;
             }
